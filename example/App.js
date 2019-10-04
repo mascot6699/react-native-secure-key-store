@@ -7,72 +7,123 @@
  * @lint-ignore-every XPLATJSCOPYRIGHT1
  */
 
-import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import React from 'react';
+import { Button, ScrollView, Dimensions, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import RNSecureKeyStore, {ACCESSIBLE} from "react-native-secure-key-store";
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
 
 type Props = {};
-export default class App extends Component<Props> {
-  render() {
+export default class App extends React.Component {
 
-    RNSecureKeyStore.set("key1", "value1", {accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY})
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
+  constructor(props) {
+    super(props);
+    this.set = this.set.bind(this);
+    this.get = this.get.bind(this);
+    this.remove = this.remove.bind(this);
 
-    RNSecureKeyStore.set("key2", "value2", {accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY})
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
-
-    RNSecureKeyStore.get("key1")
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
-
-    RNSecureKeyStore.get("key2")
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
-
-    RNSecureKeyStore.remove("key1")
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
-
-    RNSecureKeyStore.remove("key2")
-      .then((res) => {
-        console.log(res);
-      }, (err) => {
-        console.log(err);
-      });
-
-    return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
-      </View>
-    );
+    // State
+    this.state = {
+      userInput: null,
+      value: null,
+      isStored: undefined,
+    }
   }
+
+    set() {
+      if (this.state.userInput !== null) {
+            RNSecureKeyStore.set("key1", this.state.userInput, {accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY})
+              .then((res) => {
+                this.setState({
+                  isStored: true
+                })
+              }, (err) => {
+                alert(err);
+              });
+
+            RNSecureKeyStore.set("key2", "lol" + this.state.userInput + "lol", {accessible: ACCESSIBLE.ALWAYS_THIS_DEVICE_ONLY})
+              .then((res) => {
+                this.setState({
+                  isStored: true
+                })
+              }, (err) => {
+                alert(err);
+              });
+      } else {
+        alert("Please enter a value")
+      }
+    }
+
+    get() {
+        RNSecureKeyStore.get("key2").then((val) => {
+          this.setState({
+            value: val
+          })
+        }).catch((err) => {
+          alert(err)
+        })
+    }
+
+    remove() {
+      RNSecureKeyStore.remove("key1")
+        .then((res) => {
+          console.log(res);
+        }, (err) => {
+          console.log(err);
+        });
+
+      RNSecureKeyStore.remove("key2")
+        .then((res) => {
+          console.log(res);
+        }, (err) => {
+          console.log(err);
+        });
+}
+
+    render() {
+        return (
+        <ScrollView
+            bounces={false}
+            keyboardShouldPersistTaps='handled'
+        >
+          <View style={styles.container}>
+            <View>
+              <View>
+                <Text style={{
+                  fontSize: 12,
+                  paddingBottom: 10,
+                }}>Enter a value</Text>
+                <TextInput style={styles.valueInput} placeholder={'Enter a value for storing'}
+                           onChangeText={(text) => this.setState({ userInput: text })}/>
+              </View>
+              <View style={styles.buttonSet}>
+                <Button title={"SET"} onPress={this.set}/>
+                <Button title={"GET"} onPress={this.get}/>
+                <Button title={"REMOVE"} onPress={this.remove}/>
+              </View>
+              <View style={styles.showcase}>
+                <View style={{
+                  flexDirection: 'row',
+                  paddingBottom: 20
+                }}><Text style={{
+                  paddingRight: 20,
+                }}>Value is stored:</Text><Text style={{
+                  color: this.state.isStored ? '#478e47' : '#b43535'
+                }}>{this.state.isStored ? "true" : "false"}</Text></View>
+                <View style={styles.valueArea}>
+                  <View style={styles.valueTitle}><Text style={{
+                    alignSelf: 'center',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                  }}>VALUE</Text></View>
+                  <Text style={styles.value}>{this.state.value}</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+    )
+    }
 }
 
 const styles = StyleSheet.create({
@@ -81,15 +132,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
+    height: Dimensions.get('window').height
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
+  valueInput: {
+    padding: 10,
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#F1f1f1'
   },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
+  buttonSet: {
+    flexDirection: 'row',
+    paddingVertical: 25,
+    justifyContent: 'space-between'
+  },
+  showcase: {
+    paddingVertical: 10
+  },
+  valueArea: {
+    paddingVertical: 10,
+    flexDirection: 'column'
+  },
+  valueTitle: {
+    borderBottomWidth: 1,
+    paddingBottom: 5,
     marginBottom: 5,
+    borderBottomColor: '#333'
   },
+  value: {
+    paddingTop: 25,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 16
+  }
 });
